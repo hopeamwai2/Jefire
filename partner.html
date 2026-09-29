@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=1200, initial-scale=0.3">
   <meta name="description" content="Partner with JESUS FIRE IGNITERS (JEFIRE) - Donation and Partnership">
   <title>Partner & Give | JEFIRE</title>
   <link rel="stylesheet" href="style.css">
@@ -215,7 +215,7 @@
       existing.push(donationRecord);
       localStorage.setItem('jefire_donations', JSON.stringify(existing));
       localStorage.setItem('jefire_gallery_lastUpdate', new Date().toLocaleString());
-      alert(`Thank You So Much ${data.name}. May God Bless you! \n\nDonation Type: ${data.donation_type}\nAmount: KES ${data.amount || 'Prayer/Ministry'}\nMethod: ${data.payment_method}`);
+      alert(`Thank You So Much ${data.name}. May God Bless You! \n\nDonation Type: ${data.donation_type}\nAmount: KES ${data.amount || 'Prayer/Ministry'}\nMethod: ${data.payment_method}`);
       e.target.reset();
     }
   </script>
