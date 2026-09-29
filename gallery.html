@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gallery | JEFIRE - Photo Albums</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="container nav-container">
+    <a href="index.html" class="brand"><img src="images/jefire-logo.jpeg" alt="JEFIRE Logo" class="header-logo"><div class="brand-text"><strong>JESUS FIRE IGNITERS</strong><span>JEFIRE • Gallery</span></div></a>
+    <button class="menu-toggle" id="menuToggle">☰</button>
+    <nav class="main-nav" id="mainNav">
+      <a href="index.html">Home</a>
+      <a href="index.html#identity">Vision</a>
+      <a href="gallery.html" class="active">Gallery</a>
+      <a href="partner.html" class="nav-button">Give / Partner</a>
+    </nav>
+  </div>
+</header>
+<main>
+<section class="page-hero gallery-hero">
+  <div class="container">
+    <p class="section-kicker">PHOTO GALLERY</p>
+    <h1>JEFIRE in <span>Action</span></h1>
+    <p>Click any album to view many photos inside. Photos added via Admin Panel appear here automatically.</p>
+    <a href="admin.html" style="display:inline-flex;margin-top:14px;padding:8px 16px;background:rgba(255,255,255,.15);border-radius:50px;font-size:12px;font-weight:800;">🔐 Admin Login</a>
+  </div>
+</section>
+<section class="section">
+  <div class="container">
+    <div class="full-gallery-grid" id="galleryGrid"></div>
+  </div>
+</section>
+</main>
+<div id="albumModal" class="album-modal"><div class="album-modal-overlay" onclick="closeAlbum()"></div><div class="album-modal-content"><button class="album-close" onclick="closeAlbum()">✕</button><div class="album-modal-header"><h2 id="modalTitle">Album</h2><p id="modalCount"></p></div><div class="album-modal-grid" id="modalGrid"></div></div></div>
+<div id="imageViewer" class="image-viewer"><button class="viewer-close" onclick="closeViewer()">✕</button><button class="viewer-nav prev" onclick="navViewer(-1)">‹</button><img id="viewerImg" src=""><button class="viewer-nav next" onclick="navViewer(1)">›</button><div class="viewer-caption" id="viewerCaption"></div></div>
+<footer class="footer"><div class="container footer-content"><div><strong>JESUS FIRE IGNITERS</strong><span>Catch and Spread the Holy Ghost Fire</span></div><p>© 2026 JEFIRE</p></div></footer>
+<script src="script.js"></script>
+<script>
+const defaultGalleryData = {
+  conferences: [
+    {src: 'images/jefire-1.jpg', caption: 'Youth Conference - Murang\'a'},
+    {src: 'images/jefire-1-2.jpg', caption: 'Conference Teaching'},
+  ],
+  evangelism: [
+    {src: 'images/jefire-2.jpg', caption: 'Open-Air Evangelism'},
+  ],
+  worship: [
+    {src: 'images/jefire-3.jpg', caption: 'Worship Night'},
+  ],
+  crusades: [
+    {src: 'images/jefire-4.jpg', caption: 'Crusade in Nakuru'},
+  ],
+  founders: [
+    {src: 'images/pastors.jpeg', caption: 'Rev. John & Catherine'},
+  ],
+  youthcentre: [
+    {src: 'images/youth-centre-1.jpg', caption: 'Youth Mentorship'},
+    {src: 'images/youth-centre-2.jpg', caption: 'Life Skills'},
+  ],
+  mentorship: [],
+  discipleship: []
+};
+
+function getStoredCategories(){
+  try{
+    const s=localStorage.getItem('jefire_categories');
+    if(s){
+      const arr=JSON.parse(s);
+      const meta={};
+      arr.forEach(c=>{ meta[c.id]={title:c.name, desc:c.desc||''}; });
+      return meta;
+    }
+  }catch(e){}
+  return null;
+}
+const storedMeta = getStoredCategories();
+const categoryMeta = storedMeta || {
+  conferences: {title:'Youth Conferences', desc:'Teaching, worship & discipleship'},
+  evangelism: {title:'Open-Air Evangelism', desc:'Taking Gospel to communities'},
+  worship: {title:'Worship Nights', desc:'Revival and Holy Ghost fire'},
+  crusades: {title:'Crusades', desc:'From Kenol to Nakuru'},
+  founders: {title:'Founders & Leaders', desc:'Rev. John & Catherine'},
+  youthcentre: {title:'Youth Centre Dream', desc:'Rehabilitation & empowerment'},
+  mentorship: {title:'Youth Mentorship', desc:'Guiding transformed lives'},
+  discipleship: {title:'Discipleship', desc:'Growing in Word & prayer'},
+};
+
+function getAdminGallery(){
+  try{ const raw=localStorage.getItem('jefire_gallery'); return raw?JSON.parse(raw):{}; }catch(e){ return {}; }
+}
+const adminGallery = getAdminGallery();
+const galleryData = {};
+Object.keys(categoryMeta).forEach(k=>{
+  galleryData[k] = [...(defaultGalleryData[k]||[])];
+  if(adminGallery[k]) adminGallery[k].forEach(img=> galleryData[k].push({src: img.src, caption: img.caption}));
+});
+// Add any extra categories from admin
+Object.keys(adminGallery).forEach(k=>{ if(!galleryData[k]) galleryData[k]=adminGallery[k].map(i=>({src:i.src, caption:i.caption})); });
+
+// Render album cards
+const grid = document.getElementById('galleryGrid');
+Object.keys(galleryData).forEach(key=>{
+  const images = galleryData[key];
+  if(images.length===0) return;
+  const meta = categoryMeta[key] || {title:key, desc:''};
+  const firstImg = images[0].src;
+  const album = document.createElement('div');
+  album.className='gallery-album';
+  album.innerHTML=`<div class="album-cover"><img src="${firstImg}" onerror="this.src='images/jefire-logo.jpeg'"><div class="album-count"><span>${images.length}</span> photos</div></div><div class="album-info"><h3>${meta.title}</h3><p>${meta.desc}</p></div>`;
+  album.onclick=()=> openAlbum(key, meta.title);
+  grid.appendChild(album);
+});
+
+let currentAlbumImages=[]; let currentViewerIndex=0;
+function openAlbum(key, title){
+  const images = galleryData[key]||[];
+  currentAlbumImages=images;
+  document.getElementById('modalTitle').textContent=title;
+  document.getElementById('modalCount').textContent=images.length+' photos • Click to enlarge';
+  const g=document.getElementById('modalGrid'); g.innerHTML='';
+  images.forEach((img,idx)=>{
+    const div=document.createElement('div'); div.className='modal-thumb';
+    div.innerHTML=`<img src="${img.src}" onerror="this.src='images/jefire-logo.jpeg'"><span>${img.caption}</span>`;
+    div.onclick=()=> openViewer(idx);
+    g.appendChild(div);
+  });
+  document.getElementById('albumModal').classList.add('active'); document.body.style.overflow='hidden';
+}
+function closeAlbum(){ document.getElementById('albumModal').classList.remove('active'); document.body.style.overflow=''; }
+function openViewer(i){ currentViewerIndex=i; document.getElementById('viewerImg').src=currentAlbumImages[i].src; document.getElementById('viewerCaption').textContent=currentAlbumImages[i].caption; document.getElementById('imageViewer').classList.add('active'); }
+function closeViewer(){ document.getElementById('imageViewer').classList.remove('active'); }
+function navViewer(d){ currentViewerIndex=(currentViewerIndex+d+currentAlbumImages.length)%currentAlbumImages.length; openViewer(currentViewerIndex); }
+document.addEventListener('keydown', e=>{ if(e.key==='Escape'){closeViewer(); closeAlbum();} if(document.getElementById('imageViewer').classList.contains('active')){ if(e.key==='ArrowLeft') navViewer(-1); if(e.key==='ArrowRight') navViewer(1);} });
+</script>
+</body>
+</html>

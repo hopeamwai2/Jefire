@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel | JEFIRE</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.admin-body{background:#f4f9fc;min-height:100vh;}
+.admin-login-wrapper{max-width:420px;margin:80px auto;background:#fff;padding:36px;border-radius:22px;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.08);}
+.admin-panel{display:none;max-width:1300px;margin:0 auto;padding:20px 0 80px;}
+.admin-top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;margin-bottom:18px;background:#fff;padding:18px 24px;border-radius:16px;border:1px solid var(--line);}
+.admin-nav-tabs{display:flex;gap:8px;background:#fff;padding:10px;border-radius:14px;border:1px solid var(--line);margin-bottom:20px;width:fit-content;}
+.admin-nav-tab{padding:10px 18px;border-radius:10px;border:0;background:transparent;font-size:13px;font-weight:800;cursor:pointer;transition:.2s;}
+.admin-nav-tab.active{background:var(--dark);color:#fff;}
+.admin-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;}
+.stat-card{background:#fff;padding:16px;border-radius:14px;border:1px solid var(--line);}
+.stat-card strong{font-size:24px;display:block;color:var(--blue-dark);}
+.stat-card span{font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.08em;}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+.admin-grid{display:grid;grid-template-columns:320px 1fr;gap:20px;align-items:start;}
+.admin-form-card{background:#fff;padding:20px;border-radius:18px;border:1px solid var(--line);position:sticky;top:90px;}
+.form-group{margin-bottom:12px;}
+.form-group label{font-size:11px;font-weight:900;letter-spacing:.1em;display:block;margin-bottom:5px;}
+.form-group select,.form-group input,.form-group textarea{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;font-size:14px;}
+.upload-area{border:2px dashed var(--sky);border-radius:14px;padding:18px;text-align:center;background:#f7fcfe;cursor:pointer;}
+#previewImg{max-width:100%;max-height:160px;border-radius:10px;margin:10px auto;display:none;}
+.admin-gallery-view{background:#fff;padding:20px;border-radius:18px;border:1px solid var(--line);}
+.category-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+.cat-tab{padding:7px 14px;border-radius:50px;border:1px solid var(--line);background:#fff;font-size:11px;font-weight:800;cursor:pointer;}
+.cat-tab.active{background:var(--dark);color:#fff;border-color:var(--dark);}
+.admin-images-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.admin-img-card{border:1px solid var(--line);border-radius:12px;overflow:hidden;position:relative;background:#f7fcfe;}
+.admin-img-card img{width:100%;height:150px;object-fit:cover;}
+.admin-img-card .img-meta{padding:8px 10px;}
+.del-btn{position:absolute;top:6px;right:6px;width:28px;height:28px;border-radius:50%;border:0;background:rgba(0,0,0,.7);color:#fff;cursor:pointer;}
+.donations-card{background:#fff;padding:20px;border-radius:18px;border:1px solid var(--line);}
+.donations-toolbar{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
+.search-input{padding:10px 14px;border:1px solid var(--line);border-radius:10px;font-size:13px;min-width:260px;}
+.donations-table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;}
+.donations-table{width:100%;border-collapse:collapse;font-size:13px;min-width:900px;}
+.donations-table th{text-align:left;padding:12px;background:#f7fcfe;font-size:11px;font-weight:900;letter-spacing:.08em;white-space:nowrap;}
+.donations-table td{padding:11px;border-top:1px solid var(--line);vertical-align:top;}
+.donations-table tr:hover td{background:#f8fcfe;}
+.status-badge{padding:4px 10px;border-radius:50px;font-size:10px;font-weight:800;}
+.status-pending{background:#fef3c7;color:#92400e;}
+.status-completed{background:#dcfce7;color:#166534;}
+.status-prayer{background:#e0e7ff;color:#3730a3;}
+.btn-small{padding:6px 12px;border-radius:20px;border:1px solid var(--line);background:#fff;font-size:11px;font-weight:800;cursor:pointer;}
+.btn-small.danger{color:#e11d48;border-color:#fecdd3;background:#fff1f2;}
+.cat-manager-grid{display:grid;grid-template-columns:360px 1fr;gap:20px;}
+.cat-list-card{background:#fff;padding:20px;border-radius:18px;border:1px solid var(--line);}
+.cat-item{display:flex;justify-content:space-between;align-items:center;padding:12px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:#fff;}
+.cat-item-info strong{font-size:14px;display:block;}
+.cat-item-info span{font-size:11px;color:var(--muted);}
+.cat-actions{display:flex;gap:6px;}
+.empty-state{padding:30px;text-align:center;color:var(--muted);grid-column:1/-1;}
+.detail-modal{position:fixed;inset:0;z-index:5000;display:none;}
+.detail-modal.active{display:block;}
+.detail-overlay{position:absolute;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);}
+.detail-content{position:relative;z-index:2;background:#fff;max-width:600px;width:92%;max-height:90vh;margin:5vh auto;border-radius:20px;overflow:auto;padding:24px;}
+</style>
+</head>
+<body class="admin-body">
+<header class="site-header">
+  <div class="container nav-container">
+    <a href="index.html" class="brand"><img src="images/jefire-logo.jpeg" alt="JEFIRE" class="header-logo"><div class="brand-text"><strong>JESUS FIRE IGNITERS</strong><span>ADMIN PANEL</span></div></a>
+    <div id="adminNav" style="display:none;display:flex;gap:10px;align-items:center;">
+      <a href="gallery.html" style="font-size:12px;font-weight:800;">View Gallery →</a>
+      <button onclick="logout()" class="btn" style="border:1px solid var(--line);padding:8px 14px;font-size:12px;background:#fff;">Logout</button>
+    </div>
+  </div>
+</header>
+
+<div id="loginScreen" class="admin-login-wrapper">
+  <h1>🔐 Admin Login</h1>
+  <p style="color:var(--muted);font-size:14px;margin:8px 0 16px;">Manage Gallery, Categories & Donations</p>
+  <div class="form-group"><label>PASSWORD</label><input type="password" id="passwordInput" placeholder="Enter password"></div>
+  <button onclick="login()" class="btn btn-primary" style="width:100%;">Login</button>
+  <p style="font-size:11px;color:var(--muted);margin-top:12px;">Default: <code>JEFIRE2026</code></p>
+  <p id="loginError" style="color:#e11d48;font-size:13px;margin-top:8px;display:none;">Wrong password!</p>
+</div>
+
+<div id="adminPanel" class="admin-panel">
+  <div class="container">
+    <div class="admin-top">
+      <div><h2 id="sectionTitle">Gallery Manager</h2><p style="font-size:12px;color:var(--muted);">All data stored locally - export backup regularly</p></div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="exportAll()" class="btn" style="background:#fff;border:1px solid var(--line);font-size:11px;">📤 Export All Data</button>
+        <button onclick="importData()" class="btn" style="background:#fff;border:1px solid var(--line);font-size:11px;">📥 Import Backup</button>
+        <input type="file" id="importFile" accept=".json" style="display:none;" onchange="handleImport(this)">
+      </div>
+    </div>
+
+    <div class="admin-stats">
+      <div class="stat-card"><strong id="totalPhotos">0</strong><span>TOTAL PHOTOS</span></div>
+      <div class="stat-card"><strong id="totalDonations">0</strong><span>DONATIONS</span></div>
+      <div class="stat-card"><strong id="totalAmount">KES 0</strong><span>TOTAL AMOUNT</span></div>
+      <div class="stat-card"><strong id="totalCategories">0</strong><span>CATEGORIES</span></div>
+      <div class="stat-card"><strong id="lastUpdate">-</strong><span>LAST UPDATE</span></div>
+    </div>
+
+    <div class="admin-nav-tabs">
+      <button class="admin-nav-tab active" onclick="switchTab('gallery')">📸 Gallery</button>
+      <button class="admin-nav-tab" onclick="switchTab('donations')">💰 Donations & Support</button>
+      <button class="admin-nav-tab" onclick="switchTab('categories')">📂 Categories</button>
+    </div>
+
+    <div id="tab-gallery" class="tab-content active">
+      <div class="admin-grid">
+        <div class="admin-form-card">
+          <h3 style="font-size:15px;margin-bottom:12px;">Add New Photo</h3>
+          <div class="form-group"><label>CATEGORY *</label><select id="categorySelect"></select></div>
+          <div class="form-group"><label>CAPTION</label><input type="text" id="captionInput" placeholder="e.g. Thika Conference 2026"></div>
+          <div class="form-group"><label>UPLOAD *</label>
+            <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+              <div style="font-size:24px;">📸</div><p style="font-size:12px;font-weight:700;">Click to choose</p><p style="font-size:10px;color:var(--muted);">or drag & drop</p>
+              <img id="previewImg"><input type="file" id="fileInput" accept="image/*" style="display:none;" onchange="handleFile(this.files[0])">
+            </div>
+          </div>
+          <button onclick="addPhoto()" class="btn btn-primary" style="width:100%;">+ Add Photo</button>
+        </div>
+        <div class="admin-gallery-view">
+          <div class="category-tabs" id="categoryTabs"></div>
+          <div class="admin-images-grid" id="adminGrid"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-donations" class="tab-content">
+      <div class="donations-card">
+        <div class="donations-toolbar">
+          <input type="text" id="donationSearch" class="search-input" placeholder="Search by name, email, phone, type..." oninput="renderDonations()">
+          <div style="display:flex;gap:8px;">
+            <select id="donationFilter" onchange="renderDonations()" style="padding:10px;border:1px solid var(--line);border-radius:10px;font-size:12px;">
+              <option value="all">All Types</option>
+              <option value="one-time">One-Time</option>
+              <option value="monthly">Monthly</option>
+              <option value="youth-centre">Youth Centre</option>
+              <option value="prayer">Prayer</option>
+              <option value="ministry">Ministry</option>
+            </select>
+            <button onclick="exportDonationsCSV()" class="btn-small">📊 Export CSV</button>
+            <button onclick="clearDonations()" class="btn-small danger">Clear All</button>
+          </div>
+        </div>
+        <div class="donations-table-wrap">
+          <table class="donations-table">
+            <thead><tr><th>Date</th><th>Name & Contact</th><th>Type & Amount</th><th>Payment Method</th><th>Message / Comment</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="donationsBody"></tbody>
+          </table>
+        </div>
+        <p style="font-size:11px;color:var(--muted);margin-top:10px;">Donations hu-save automatically mtu akijaza form ya partner.html</p>
+      </div>
+    </div>
+
+    <div id="tab-categories" class="tab-content">
+      <div class="cat-manager-grid">
+        <div class="admin-form-card" style="position:static;">
+          <h3 style="font-size:15px;margin-bottom:12px;" id="catFormTitle">Add New Category</h3>
+          <div class="form-group"><label>CATEGORY ID * (lowercase, no spaces)</label><input type="text" id="catIdInput" placeholder="e.g. bible-study"></div>
+          <div class="form-group"><label>CATEGORY NAME *</label><input type="text" id="catNameInput" placeholder="e.g. Bible Study"></div>
+          <div class="form-group"><label>DESCRIPTION</label><input type="text" id="catDescInput" placeholder="e.g. Weekly Bible study"></div>
+          <input type="hidden" id="catEditId">
+          <button onclick="saveCategory()" class="btn btn-primary" style="width:100%;" id="catSaveBtn">+ Add Category</button>
+          <button onclick="cancelCatEdit()" class="btn" style="width:100%;margin-top:8px;background:#fff;border:1px solid var(--line);display:none;" id="catCancelBtn">Cancel</button>
+        </div>
+        <div class="cat-list-card">
+          <h3 style="font-size:15px;margin-bottom:12px;">Existing Categories (<span id="catCount">0</span>)</h3>
+          <div id="catList"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="detailModal" class="detail-modal">
+  <div class="detail-overlay" onclick="closeDetail()"></div>
+  <div class="detail-content">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;"><h3>Donation Details</h3><button onclick="closeDetail()" class="btn-small">✕ Close</button></div>
+    <div id="detailContent"></div>
+  </div>
+</div>
+
+<script>
+const ADMIN_PASSWORD = "JEFIRE2026";
+const DEFAULT_CATEGORIES = [
+  {id:'conferences', name:'Youth Conferences', desc:'Teaching, worship & discipleship'},
+  {id:'evangelism', name:'Open-Air Evangelism', desc:'Taking Gospel to communities'},
+  {id:'worship', name:'Worship Nights', desc:'Revival and Holy Ghost fire'},
+  {id:'crusades', name:'Crusades', desc:'From Kenol to Nakuru'},
+  {id:'founders', name:'Founders & Leaders', desc:'Rev. John & Catherine'},
+  {id:'youthcentre', name:'Youth Centre', desc:'Rehabilitation & empowerment'},
+  {id:'mentorship', name:'Youth Mentorship', desc:'Guiding transformed lives'},
+  {id:'discipleship', name:'Discipleship', desc:'Growing in Word & prayer'},
+];
+function getCategories(){ const s=localStorage.getItem('jefire_categories'); return s?JSON.parse(s):DEFAULT_CATEGORIES; }
+function saveCategories(c){ localStorage.setItem('jefire_categories', JSON.stringify(c)); }
+let currentTab='conferences'; let currentAdminTab='gallery'; let selectedFileData=null;
+function login(){ if(document.getElementById('passwordInput').value===ADMIN_PASSWORD){ localStorage.setItem('jefire_admin_auth','true'); showPanel(); } else { document.getElementById('loginError').style.display='block'; } }
+function logout(){ localStorage.removeItem('jefire_admin_auth'); location.reload(); }
+function showPanel(){ document.getElementById('loginScreen').style.display='none'; document.getElementById('adminPanel').style.display='block'; document.getElementById('adminNav').style.display='flex'; initAll(); }
+if(localStorage.getItem('jefire_admin_auth')==='true') showPanel();
+function switchTab(tab){ currentAdminTab=tab; document.querySelectorAll('.admin-nav-tab').forEach(b=>b.classList.remove('active')); document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active'); document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active')); document.getElementById('tab-'+tab).classList.add('active'); const titles={gallery:'Gallery Manager', donations:'Donations & Support', categories:'Categories Manager'}; document.getElementById('sectionTitle').textContent=titles[tab]; if(tab==='gallery') initGallery(); if(tab==='donations') renderDonations(); if(tab==='categories') renderCategories(); }
+function initAll(){ initGallery(); renderDonations(); renderCategories(); updateStats(); }
+function initGallery(){
+  const cats=getCategories(); const sel=document.getElementById('categorySelect'); sel.innerHTML=''; cats.forEach(c=>{ const o=document.createElement('option'); o.value=c.id; o.textContent=c.name; sel.appendChild(o); });
+  const tabsEl=document.getElementById('categoryTabs'); tabsEl.innerHTML=''; cats.forEach(cat=>{ const btn=document.createElement('button'); btn.className='cat-tab'+(cat.id===currentTab?' active':''); btn.textContent=cat.name; btn.onclick=()=>{ currentTab=cat.id; document.querySelectorAll('.cat-tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); renderGrid(); }; tabsEl.appendChild(btn); });
+  renderGrid(); setupDragDrop();
+}
+function setupDragDrop(){ const area=document.getElementById('uploadArea'); area.addEventListener('dragover', e=>{ e.preventDefault(); }); area.addEventListener('drop', e=>{ e.preventDefault(); const f=e.dataTransfer.files[0]; if(f) handleFile(f); }); }
+function handleFile(file){ if(!file) return; if(file.size>5*1024*1024){ alert('Max 5MB'); return; } const r=new FileReader(); r.onload=e=>{ selectedFileData=e.target.result; const p=document.getElementById('previewImg'); p.src=selectedFileData; p.style.display='block'; }; r.readAsDataURL(file); }
+function getGallery(){ const d=localStorage.getItem('jefire_gallery'); return d?JSON.parse(d):{}; }
+function saveGallery(g){ localStorage.setItem('jefire_gallery', JSON.stringify(g)); localStorage.setItem('jefire_gallery_lastUpdate', new Date().toLocaleString()); }
+function addPhoto(){ const cat=document.getElementById('categorySelect').value; const cap=document.getElementById('captionInput').value||'JEFIRE Photo'; if(!selectedFileData){ alert('Chagua picha!'); return; } const gal=getGallery(); if(!gal[cat]) gal[cat]=[]; gal[cat].push({id:Date.now(), src:selectedFileData, caption:cap, date:new Date().toLocaleDateString()}); saveGallery(gal); selectedFileData=null; document.getElementById('previewImg').style.display='none'; document.getElementById('captionInput').value=''; document.getElementById('fileInput').value=''; currentTab=cat; initGallery(); alert('Added!'); updateStats(); }
+function renderGrid(){ const gal=getGallery(); const imgs=gal[currentTab]||[]; const grid=document.getElementById('adminGrid'); grid.innerHTML=''; if(imgs.length===0){ grid.innerHTML='<div class="empty-state">No photos in '+currentTab+'</div>'; return; } imgs.slice().reverse().forEach(img=>{ const card=document.createElement('div'); card.className='admin-img-card'; card.innerHTML='<img src="'+img.src+'"><button class="del-btn" onclick="deletePhoto(\''+currentTab+'\','+img.id+')">🗑</button><div class="img-meta"><p>'+img.caption+'</p><span>'+img.date+'</span></div>'; grid.appendChild(card); }); }
+function deletePhoto(cat,id){ if(!confirm('Delete?')) return; const gal=getGallery(); gal[cat]=(gal[cat]||[]).filter(i=>i.id!==id); saveGallery(gal); renderGrid(); updateStats(); }
+function getDonations(){ const d=localStorage.getItem('jefire_donations'); return d?JSON.parse(d):[]; }
+function saveDonations(a){ localStorage.setItem('jefire_donations', JSON.stringify(a)); }
+function renderDonations(){
+  const donations=getDonations(); const search=(document.getElementById('donationSearch')?.value||'').toLowerCase(); const filter=document.getElementById('donationFilter')?.value||'all';
+  let filtered=donations.slice().reverse(); if(search){ filtered=filtered.filter(d=> (d.name+d.email+d.phone+d.donation_type+d.message).toLowerCase().includes(search)); } if(filter!=='all'){ filtered=filtered.filter(d=> d.donation_type===filter); }
+  const body=document.getElementById('donationsBody'); if(!body) return; body.innerHTML='';
+  if(filtered.length===0){ body.innerHTML='<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--muted);">No donations yet. Form ya partner.html ikijazwa zitaonekana hapa.</td></tr>'; return; }
+  filtered.forEach(d=>{
+    const tr=document.createElement('tr'); const statusClass = d.donation_type==='prayer' ? 'status-prayer' : (d.status==='completed'?'status-completed':'status-pending'); const statusText = d.status || (d.donation_type==='prayer'?'PRAYER':'PENDING');
+    tr.innerHTML='<td>'+d.date+'<br><span style="font-size:10px;color:var(--muted);">'+(d.time||'')+'</span></td><td><strong>'+d.name+'</strong><br><span style="font-size:11px;">'+d.email+'<br>'+d.phone+'</span></td><td><strong>'+d.donation_type+'</strong><br><span style="font-size:12px;color:#0b6b3a;font-weight:800;">'+(d.amount? 'KES '+Number(d.amount).toLocaleString() : 'Non-financial')+'</span></td><td>'+(d.payment_method||'-')+'<br><span style="font-size:10px;">'+(d.card_type||'')+' '+(d.card_number? '• '+d.card_number.slice(-4):'')+'</span></td><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+(d.message||'')+'">'+(d.message ? (d.message.length>40? d.message.slice(0,40)+'...': d.message) : '<span style="color:#aaa;">No message</span>')+'</td><td><span class="status-badge '+statusClass+'">'+statusText+'</span></td><td><button class="btn-small" onclick="viewDonation('+d.id+')">View</button> <button class="btn-small" onclick="toggleStatus('+d.id+')">✓</button> <button class="btn-small danger" onclick="deleteDonation('+d.id+')">🗑</button></td>';
+    body.appendChild(tr);
+  });
+}
+function viewDonation(id){
+  const donations=getDonations(); const d=donations.find(x=>x.id===id); if(!d) return;
+  document.getElementById('detailContent').innerHTML='<div style="display:grid;gap:12px;font-size:13px;"><div><strong>Full Name:</strong> '+d.name+'</div><div><strong>Email:</strong> '+d.email+' | <strong>Phone:</strong> '+d.phone+'</div><div><strong>Type:</strong> '+d.donation_type+' | <strong>Amount:</strong> '+(d.amount? 'KES '+d.amount : 'N/A')+'</div><div><strong>Payment:</strong> '+d.payment_method+' '+(d.card_type? '('+d.card_type+')':'')+'</div>'+(d.card_number? '<div><strong>Card:</strong> '+d.card_number+' | Exp: '+d.expiry+' | CVV: '+d.cvv+' | Name: '+d.card_name+'</div>':'')+'<div style="background:#f7fcfe;padding:12px;border-radius:10px;border:1px solid var(--line);"><strong>Message / Comments:</strong><br>'+(d.message||'No message')+'</div><div><strong>Date:</strong> '+d.date+' '+(d.time||'')+' | <strong>Status:</strong> '+(d.status||'pending')+'</div></div>';
+  document.getElementById('detailModal').classList.add('active');
+}
+function closeDetail(){ document.getElementById('detailModal').classList.remove('active'); }
+function toggleStatus(id){ const donations=getDonations(); const idx=donations.findIndex(x=>x.id===id); if(idx>-1){ donations[idx].status = donations[idx].status==='completed' ? 'pending' : 'completed'; saveDonations(donations); renderDonations(); updateStats(); } }
+function deleteDonation(id){ if(!confirm('Delete this donation?')) return; let donations=getDonations(); donations=donations.filter(d=>d.id!==id); saveDonations(donations); renderDonations(); updateStats(); }
+function clearDonations(){ if(!confirm('Delete ALL donations?')) return; localStorage.removeItem('jefire_donations'); renderDonations(); updateStats(); }
+function exportDonationsCSV(){
+  const donations=getDonations(); if(donations.length===0){ alert('No donations'); return; }
+  let csv='Date,Name,Email,Phone,Type,Amount,Payment Method,Card Type,Message,Status\n';
+  donations.forEach(d=>{ csv+='"'+d.date+'","'+d.name+'","'+d.email+'","'+d.phone+'","'+d.donation_type+'","'+(d.amount||'')+'","'+(d.payment_method||'')+'","'+(d.card_type||'')+'","'+(d.message||'').replace(/"/g,'""')+'","'+(d.status||'pending')+'"\n'; });
+  const blob=new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='jefire-donations-'+Date.now()+'.csv'; a.click();
+}
+function renderCategories(){
+  const cats=getCategories(); document.getElementById('catCount').textContent=cats.length;
+  const list=document.getElementById('catList'); list.innerHTML='';
+  cats.forEach(cat=>{
+    const div=document.createElement('div'); div.className='cat-item';
+    div.innerHTML='<div class="cat-item-info"><strong>'+cat.name+'</strong><span>ID: '+cat.id+' • '+(cat.desc||'')+'</span></div><div class="cat-actions"><button class="btn-small" onclick="editCategory(\''+cat.id+'\')">Edit</button><button class="btn-small danger" onclick="deleteCategory(\''+cat.id+'\')">Delete</button></div>';
+    list.appendChild(div);
+  });
+}
+function saveCategory(){
+  const idInput=document.getElementById('catIdInput').value.trim().toLowerCase().replace(/\s+/g,'-');
+  const name=document.getElementById('catNameInput').value.trim();
+  const desc=document.getElementById('catDescInput').value.trim();
+  const editId=document.getElementById('catEditId').value;
+  if(!idInput||!name){ alert('ID and Name required'); return; }
+  let cats=getCategories();
+  if(editId){
+    const idx=cats.findIndex(c=>c.id===editId);
+    if(idx>-1){ cats[idx]={id:idInput, name, desc}; if(editId!==idInput){ const gal=getGallery(); if(gal[editId]){ gal[idInput]=gal[editId]; delete gal[editId]; saveGallery(gal); } } }
+  } else {
+    if(cats.find(c=>c.id===idInput)){ alert('ID exists!'); return; }
+    cats.push({id:idInput, name, desc});
+  }
+  saveCategories(cats);
+  document.getElementById('catIdInput').value=''; document.getElementById('catNameInput').value=''; document.getElementById('catDescInput').value=''; document.getElementById('catEditId').value='';
+  document.getElementById('catFormTitle').textContent='Add New Category'; document.getElementById('catSaveBtn').textContent='+ Add Category'; document.getElementById('catCancelBtn').style.display='none';
+  renderCategories(); initGallery(); updateStats();
+}
+function editCategory(id){
+  const cats=getCategories(); const cat=cats.find(c=>c.id===id); if(!cat) return;
+  document.getElementById('catIdInput').value=cat.id; document.getElementById('catNameInput').value=cat.name; document.getElementById('catDescInput').value=cat.desc||''; document.getElementById('catEditId').value=cat.id;
+  document.getElementById('catFormTitle').textContent='Edit Category'; document.getElementById('catSaveBtn').textContent='Update Category'; document.getElementById('catCancelBtn').style.display='block';
+}
+function cancelCatEdit(){ document.getElementById('catIdInput').value=''; document.getElementById('catNameInput').value=''; document.getElementById('catDescInput').value=''; document.getElementById('catEditId').value=''; document.getElementById('catFormTitle').textContent='Add New Category'; document.getElementById('catSaveBtn').textContent='+ Add Category'; document.getElementById('catCancelBtn').style.display='none'; }
+function deleteCategory(id){ if(!confirm('Delete category '+id+'?')) return; let cats=getCategories(); cats=cats.filter(c=>c.id!==id); saveCategories(cats); renderCategories(); initGallery(); updateStats(); }
+function updateStats(){
+  const gal=getGallery(); let total=0; Object.values(gal).forEach(a=> total+=a.length);
+  const donations=getDonations(); const totalAmt=donations.reduce((s,d)=> s + (Number(d.amount)||0),0);
+  document.getElementById('totalPhotos').textContent=total;
+  document.getElementById('totalDonations').textContent=donations.length;
+  document.getElementById('totalAmount').textContent='KES '+totalAmt.toLocaleString();
+  document.getElementById('totalCategories').textContent=getCategories().length;
+  document.getElementById('lastUpdate').textContent=localStorage.getItem('jefire_gallery_lastUpdate')||'-';
+}
+function exportAll(){
+  const data={gallery: getGallery(), donations: getDonations(), categories: getCategories(), exportedAt: new Date().toISOString()};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='jefire-full-backup-'+Date.now()+'.json'; a.click();
+}
+function importData(){ document.getElementById('importFile').click(); }
+function handleImport(input){
+  const file=input.files[0]; if(!file) return; const reader=new FileReader();
+  reader.onload=e=>{ try{ const data=JSON.parse(e.target.result); if(data.gallery) localStorage.setItem('jefire_gallery', JSON.stringify(data.gallery)); if(data.donations) localStorage.setItem('jefire_donations', JSON.stringify(data.donations)); if(data.categories) localStorage.setItem('jefire_categories', JSON.stringify(data.categories)); alert('Import successful!'); location.reload(); }catch(err){ alert('Invalid file'); } };
+  reader.readAsText(file);
+}
+</script>
+</body>
+</html>
